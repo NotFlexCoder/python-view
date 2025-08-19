@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response
 import io, contextlib
 
 app = Flask(__name__)
@@ -7,12 +7,12 @@ app = Flask(__name__)
 def run_code():
     code = request.args.get("code")
     if not code:
-        return jsonify({"error": "No code provided"}), 400
+        return Response("No code provided", mimetype="text/plain", status=400)
     try:
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             exec(code, {})
-        output = buffer.getvalue().strip()
-        return jsonify({"output": output})
+        output = buffer.getvalue()
+        return Response(output, mimetype="text/plain")
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return Response(str(e), mimetype="text/plain", status=500)
