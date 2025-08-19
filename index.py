@@ -1,23 +1,21 @@
-import sys, json, io, contextlib
+from flask import Flask, request, jsonify
+import io, contextlib
 
-def handler(request):
-    code = request.query.get("code")
+app = Flask(__name__)
+
+@app.route("/api/run", methods=["GET"])
+def run_code():
+    code = request.args.get("code")
     if not code:
-        return {
-            "statusCode": 400,
-            "body": json.dumps({"error": "No code provided"})
-        }
+        return jsonify({"error": "No code provided"}), 400
     try:
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             exec(code, {})
         output = buffer.getvalue().strip()
-        return {
-            "statusCode": 200,
-            "body": json.dumps({"output": output})
-        }
+        return jsonify({"output": output})
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
-        }
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run()
